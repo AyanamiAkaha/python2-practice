@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 
 def celsius2fahrenheit(celsius):
@@ -8,19 +10,19 @@ def fahrenheit2celsius(fahrenheit):
 
 def main():
   if len(sys.argv) != 3:
-    print >> sys.stderr, 'Usage: {0} <temperature> <F|C>'.format(sys.argv[0])
+    print('Usage: {0} <temperature> <F|C>'.format(sys.argv[0]), file=sys.stderr)
     return
   try:
     temperature = float(sys.argv[1])
   except ValueError:
-    print >> sys.stderr, '{0} is not a number'.format(sys.argv[1])
+    print('{0} is not a number'.format(sys.argv[1]), file=sys.stderr)
     return
   if(sys.argv[2].lower() == 'f'):
-    print fahrenheit2celsius(temperature)
+    print(fahrenheit2celsius(temperature))
   elif(sys.argv[2].lower() == 'c'):
-    print celsius2fahrenheit(temperature)
+    print(celsius2fahrenheit(temperature))
   else:
-    print >> sys.stderr, 'Unknown scale {0}'.format(sys.argv[2])
+    print('Unknown scale {0}'.format(sys.argv[2]), file=sys.stderr)
 
 if(__name__ == '__main__'):
   main()
