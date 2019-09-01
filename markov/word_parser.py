@@ -22,6 +22,20 @@ def open(fname):
   """
   return Parser(io.open(fname))
 
+def is_word(c):
+  """
+  :param c character to check
+  :returns True if c is alphanumeric
+  """
+  return c.isalnum()
+
+def is_WORD(c):
+  """
+  :param c character to check
+  :returns True if c is not whitespace
+  """
+  return c and not c.isspace()
+
 class Parser:
   """
   Class for parsing given file into words.
@@ -31,38 +45,47 @@ class Parser:
   Example use case is gathering statistics for a marrkov chaindatabase.
 
   Example 1: alphanumeric words
-	>>> import io
-	>>> from Parser import Parser
-	>>> p=Parser(io.StringIO(u'Big black boobs!'))
-	>>> p.next_word()
-	u'Big'
-	>>> p.next_word()
-	u'black'
-	>>> p.next_word()
-	u'boobs'
-	>>> p.next_word()
-	>>> p.next_word()
-	>>> p.close()
+  >>> import io
+  >>> from word_parser import Parser
+  >>> p=Parser(io.StringIO(u'some text stream.'))
+  >>> for w in p:
+  ...   print w
+  ...
+  some
+  text
+  stream
+  >>> p.close()
 
-	Example 2: space-delimited words
-	>>> p=Parser(io.StringIO(u'Big black boobs!'))
-	>>> p.next_WORD()
-	u'Big'
-	>>> p.next_WORD()
-	u'black'
-	>>> p.next_WORD()
-	u'boobs!'
-	>>> p.next_WORD()
-	>>> p.next_WORD()
-	>>> p.close()
+  Example 2: space-delimited words
+  >>> import io
+  >>> from word_parser import *
+  >>> p=Parser(io.StringIO(u'Some test, String stream.'))
+  >>> p=Parser(io.StringIO(u'Some test, String stream.'), is_WORD)
+  >>> for w in p:
+  ...   print w
+  ...
+  Some
+  test,
+  String
+  stream.
+  >>> p.close()
 
   :param stream stream to parse from
+  :param word_char_cb = is_word callback returning true for a characters to be considered words.
   """
-  def __init__(self, stream):
+
+  def __init__(self, stream, word_char_cb = is_word):
     self._stream = stream
+    self.word_char_callback = word_char_cb
 
   def __del__(self):
     self._stream.close()
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    return self.next()
 
   def close(self):
     """
@@ -71,7 +94,7 @@ class Parser:
     """
     self._stream.close()
 
-  def next_word(self):
+  def next(self):
     """
     Returns next word from a file stream.
     The word is a continuous alphanumeric string. Skips non-alphanumeric
@@ -80,26 +103,12 @@ class Parser:
     word = ''
     # skip non-alphanumeric
     c=self._stream.read(1)
-    while c and not c.isalnum():
+    while c and not self.word_char_callback(c):
       c=self._stream.read(1)
-    while c.isalnum():
+    while self.word_char_callback(c):
       word += c
       c = self._stream.read(1)
-    return word or None
-
-  def next_WORD(self):
-    """
-    Returns next WORD from a file stream.
-    The WORD is a series of characters delimited by whitespace. Skips
-    whitespace at the beginning, untif non-whitespace is found.
-    """
-    word = ''
-    # skip non-alphanumeric
-    c=self._stream.read(1)
-    while c.isspace():
-      c=self._stream.read(1)
-    while c and not c.isspace():
-      word += c
-      c = self._stream.read(1)
-    return word or None
+    if not word:
+      raise StopIteration
+    return word
 
