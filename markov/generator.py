@@ -34,11 +34,24 @@ class Generator:
     self.SELECT_FIRST = 'SELECT * FROM markov WHERE w1 IS NULL ORDER BY cnt'
     self._cursor = self._db.cursor()
 
+  def __del__(self):
+    try:
+      self.close()
+    except:
+      # we might be closed, and we're being destroyed anyway. Ignore.
+      pass
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    return self.next()
+
   def close(self):
     self._cursor.close()
     self._db.close()
 
-  def next_word(self):
+  def next(self):
     """
     Generates next word in the chain
     """
@@ -47,7 +60,7 @@ class Generator:
     else:
       self._cursor.execute(self.SELECT_FIRST)
     wordstat = self._cursor.fetchall()
-    print wordstat
+    # print wordstat
     w = random_from(wordstat)
     self.last_word = w
     return w
