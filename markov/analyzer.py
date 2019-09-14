@@ -129,3 +129,4 @@ class Analyzer:
       if current[-1:] == '.':
         self.__upsert(current, None)
         last = None
+    self._db.commit()
