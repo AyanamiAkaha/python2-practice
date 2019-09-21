@@ -1,41 +1,46 @@
+#!/usr/bin/env python
 from __future__ import print_function
-import io, sys
+import io, sys, sqlite3
 import codecs
 import argparse
 
 import markov
 
 def analyze(args):
-  #TODO prepare args
+  custom=False
   if(args.instream):
     in_stream = io.open(args.instream)
     custom=True
   else:
-    in_stream = codecs.getreader('utf8')(sys.stdins)
+    in_stream = codecs.getreader('utf8')(sys.stdin)
   analyzer = markov.Analyzer(in_stream, sqlite3, args.db)
   analyzer.parse()
   analyzer.close()
   if(custom): in_stream.close()
 
-def _inc_count(args, counter, chars):
-  if args.units == 'words':
-    return counter+1
-  elif args.units == 'bytes' or args.units == 'b':
-    return counter+chars+1 # +1 for the space
-  elif args.units == 'kilobytes' or args.units == 'kb':
-    return counter + (chars/1024.0)
-  elif args.units == 'megabytes' or args.units == 'mb':
-    return counter + (chars/1024.0/1024.0)
+def _increment(args, chars):
+  if not chars: return 0.0
+  if args.unit == 'words':
+    return 1
+  elif args.unit == 'bytes' or args.unit == 'b':
+    return chars+1 # +1 for the space
+  elif args.unit == 'kilobytes' or args.unit == 'kb':
+    return (chars/1024.0)
+  elif args.unit == 'megabytes' or args.unit == 'mb':
+    return (chars/1024.0/1024.0)
   raise 'Unknown unit '+args.units
 
-def parse(args):
+def generate(args):
   count = 0.0
-  generator = markov.Generator(sqlite, args.db)
-  for w in generator:
-    # TODO handle --out
-    print(w+' ')
-    count += _inc_count(args, count, len(w))
-    if(count > args.count): break
+  generator = markov.Generator(sqlite3, args.db)
+  # TODO handle --out
+  while count < args.count: # generator ends sequence on None
+    for w in generator:
+      if not w: continue
+      print(w, end=' ')
+      count += _increment(args, len(w))
+      if(count > args.count): break
+    print('');
   # TODO close out file if needed
 
 def main():
@@ -73,3 +78,6 @@ def main():
                                                 'megabytes', 'mb'])
   args = arg_parser.parse_args()
   args.command(args)
+
+if __name__ == '__main__':
+  main()
