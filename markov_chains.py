@@ -33,15 +33,20 @@ def _increment(args, chars):
 def generate(args):
   count = 0.0
   generator = markov.Generator(sqlite3, args.db)
-  # TODO handle --out
+  custom = False
+  if(args.outstream):
+    out_stream = io.open(args.outstream, mode='w')
+    custom=True
+  else:
+    out_stream = codecs.getwriter('utf8')(sys.stdout)
   while count < args.count: # generator ends sequence on None
     for w in generator:
       if not w: continue
-      print(w, end=' ')
+      out_stream.write(w.encode('utf8') + u' ')
       count += _increment(args, len(w))
       if(count > args.count): break
-    print('');
-  # TODO close out file if needed
+    out_stream.write(u'\n')
+  if(custom): out_stream.close()
 
 def main():
   arg_parser = argparse.ArgumentParser()
